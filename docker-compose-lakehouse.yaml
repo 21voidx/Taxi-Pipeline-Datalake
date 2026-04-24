@@ -43,7 +43,7 @@ services:
       polaris.features.DROP_WITH_PURGE_ENABLED: true # allow dropping tables from the SQL client
       polaris.realm-context.realms: default-realm
     healthcheck:
-      test: ["CMD", "curl", "http://localhost:8181/healthcheck"]
+      test: ["CMD", "curl", "http://localhost:8182/healthcheck"]
       interval: 5s
       timeout: 10s
       retries: 5
