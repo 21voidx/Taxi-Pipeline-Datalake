@@ -67,6 +67,31 @@ services:
     networks:
       - taxi-network
 
+  mongodb-rs-init:
+    image: mongo:latest
+    container_name: mongodb-rs-init
+    networks:
+      - taxi-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: >
+      bash -c "
+        echo 'Initiating replica set ...' &&
+        mongosh --host mongodb:27017 --eval '
+          rs.initiate({
+            _id: \"rs0\",
+            members: [{ _id: 0, host: \"mongodb:27017\" }]
+          })
+        ' || true &&
+        sleep 5 &&
+        echo 'Seeding collections ...' &&
+        mongosh --host mongodb:27017 /scripts/init_mongodb.js
+      "
+    volumes:
+      - ./data-generator/mongodb/init_mongodb.js:/scripts/init_mongodb.js:ro
+
 networks:
   taxi-network:
     # driver: bridge
