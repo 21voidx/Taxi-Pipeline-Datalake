@@ -1,0 +1,8 @@
+dbt-core==1.11.7
+dbt-bigquery==1.11.1
+
+# dbt packages installed via packages.yml (dbt deps):
+# dbt-labs/dbt_utils==1.1.1
+# dbt-labs/audit_helper==0.9.0
+# calogica/dbt_expectations==0.10.1
+# dbt-labs/dbt_project_evaluator==0.8.0

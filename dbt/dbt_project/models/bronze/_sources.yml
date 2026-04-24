@@ -1,0 +1,290 @@
+version: 2
+
+# ══════════════════════════════════════════════════════════════════
+#  BRONZE LAYER — Source Definitions
+#  Dataset: dev_bronze_pg  (loaded by Airflow from PostgreSQL)
+#  These tables are raw, unmodified copies from the OLTP source.
+# ══════════════════════════════════════════════════════════════════
+
+sources:
+  - name: bronze_pg
+    description: >
+      Raw tables loaded by Airflow from PostgreSQL (ride_ops_pg) into
+      BigQuery dataset `dev_bronze_pg`. Data is an exact replica of the
+      OLTP source and may contain dirty values (phone numbers, NIK,
+      license plates). All cleaning happens in the Silver layer.
+    database: "{{ var('gcp_project') }}"
+    schema: "{{ target.name }}_{{ var('bronze_pg_dataset') }}"
+    tags: ["bronze", "postgres"]
+    # ── Freshness SLA ──
+    freshness:
+      warn_after: { count: 2, period: hour }
+      error_after: { count: 6, period: hour }
+    loaded_at_field: _ingested_at
+
+    tables:
+
+      # ─────────────────────────────────────────
+      #  ZONES  (lookup / reference)
+      # ─────────────────────────────────────────
+      - name: zones
+        description: >
+          Geographic zone lookup table. Static reference data for Jakarta
+          and surrounding areas (Tangerang, Bekasi, Depok, BSD).
+        loaded_at_field: created_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 72, period: hour }
+        columns:
+          - name: zone_id
+            description: Surrogate integer key for the zone.
+            tests: [unique, not_null]
+          - name: zone_code
+            description: Short code identifier (e.g. JKT-SEL, TGR, BKS).
+            tests: [unique, not_null]
+          - name: zone_name
+            description: Human-readable zone name.
+            tests: [not_null]
+          - name: city
+            description: Parent city (Jakarta, Banten, Jawa Barat).
+          - name: latitude
+            description: Centroid latitude of the zone.
+          - name: longitude
+            description: Centroid longitude of the zone.
+          - name: is_active
+            description: Whether the zone is currently active.
+          - name: created_at
+            description: Timestamp when the record was created in PostgreSQL.
+
+      # ─────────────────────────────────────────
+      #  VEHICLE TYPES  (lookup / reference)
+      # ─────────────────────────────────────────
+      - name: vehicle_types
+        description: >
+          Fare configuration per vehicle category: Motor, Economi, Comfort,
+          SUV, and Premium. Base fares and rates are in Indonesian Rupiah (IDR).
+        loaded_at_field: created_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 72, period: hour }
+        columns:
+          - name: vehicle_type_id
+            description: Surrogate integer primary key.
+            tests: [unique, not_null]
+          - name: type_code
+            description: Short code (MOTOR, ECONOMI, COMFORT, SUV, PREMIUM).
+            tests:
+              - unique
+              - not_null
+              - accepted_values:
+                  values: ["MOTOR", "ECONOMI", "COMFORT", "SUV", "PREMIUM"]
+          - name: type_name
+            description: Display name of the vehicle category.
+          - name: base_fare
+            description: Fixed base fare in IDR charged per trip.
+          - name: per_km_rate
+            description: Rate per kilometre in IDR.
+          - name: per_minute_rate
+            description: Rate per minute in IDR.
+          - name: capacity
+            description: Maximum passenger capacity.
+
+      # ─────────────────────────────────────────
+      #  DRIVERS
+      # ─────────────────────────────────────────
+      - name: drivers
+        description: >
+          Driver profiles loaded from PostgreSQL. Contains intentionally
+          dirty values for phone_number (some with +62 prefix or dashes),
+          nik (with spaces or 15-digit typos), and license_plate (some lowercase).
+          Cleaned versions live in the Silver layer.
+        loaded_at_field: updated_at
+        columns:
+          - name: driver_id
+            description: UUID primary key generated in PostgreSQL.
+            tests: [unique, not_null]
+          - name: driver_code
+            description: Human-readable driver code (DRV-XXXXXXXX).
+            tests: [unique, not_null]
+          - name: full_name
+            description: Driver's full name (may be Indonesian Faker data).
+          - name: phone_number
+            description: >
+              Phone number – dirty. May include +62 prefix, dashes, or
+              non-standard formatting. Cleaned to 08XXXXXXXXX in Silver.
+          - name: email
+            description: Optional email address. ~15% of records are NULL.
+          - name: nik
+            description: >
+              Indonesian national ID number – dirty. May have spaces,
+              or only 15 digits. Cleaned via REGEXP in Silver.
+          - name: sim_number
+            description: Driver's license number.
+          - name: license_plate
+            description: Vehicle license plate – may be lowercase.
+          - name: vehicle_type_id
+            description: FK to vehicle_types.vehicle_type_id.
+          - name: vehicle_brand
+          - name: vehicle_model
+          - name: vehicle_year
+          - name: vehicle_color
+          - name: home_zone_id
+            description: FK to zones.zone_id (driver's home area).
+          - name: rating
+            description: Weighted average driver rating (0.00–5.00).
+          - name: total_trips
+          - name: status
+            description: Driver status (ACTIVE, INACTIVE, SUSPENDED, PENDING).
+            tests:
+              - accepted_values:
+                  values: ["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING"]
+          - name: joined_at
+          - name: updated_at
+            description: Timestamp of last update; used for incremental loads.
+          - name: _source_system
+            description: Hardcoded 'postgres' identifier for lineage tracking.
+
+      # ─────────────────────────────────────────
+      #  PASSENGERS
+      # ─────────────────────────────────────────
+      - name: passengers
+        description: >
+          Passenger profiles. Phone numbers follow the same dirty patterns
+          as drivers (~8% with +62 prefix, ~4% with dashes).
+        loaded_at_field: updated_at
+        columns:
+          - name: passenger_id
+            description: UUID primary key.
+            tests: [unique, not_null]
+          - name: passenger_code
+            description: Human-readable code (PAX-XXXXXXXXX).
+            tests: [unique, not_null]
+          - name: full_name
+          - name: phone_number
+            description: Dirty phone number; cleaned in Silver.
+          - name: email
+            description: Optional – ~20% NULL.
+          - name: birth_date
+            description: Date of birth (minimum age 18, maximum 65 at seed time).
+          - name: gender
+            description: Gender identifier.
+            tests:
+              - accepted_values:
+                  values: ["M", "F", "OTHER", "UNKNOWN"]
+          - name: home_zone_id
+          - name: referral_code
+            description: Referral code used during registration (nullable).
+          - name: is_verified
+          - name: total_trips
+          - name: status
+            tests:
+              - accepted_values:
+                  values: ["ACTIVE", "INACTIVE", "BANNED"]
+          - name: registered_at
+          - name: updated_at
+          - name: _source_system
+
+      # ─────────────────────────────────────────
+      #  RIDES
+      # ─────────────────────────────────────────
+      - name: rides
+        description: >
+          Core transactional table. Every order lifecycle (REQUESTED →
+          ACCEPTED → PICKED_UP → COMPLETED / CANCELLED / NO_DRIVER) is
+          represented here with timestamps, geo-coordinates, fare components,
+          surge multiplier, and ratings.
+        loaded_at_field: updated_at
+        columns:
+          - name: ride_id
+            description: UUID primary key.
+            tests: [unique, not_null]
+          - name: ride_code
+            description: Human-readable code (RIDE-XXXXXXXXXXXX).
+            tests: [unique, not_null]
+          - name: driver_id
+            description: FK to drivers.driver_id. NULL if NO_DRIVER status.
+          - name: passenger_id
+            description: FK to passengers.passenger_id.
+            tests: [not_null]
+          - name: vehicle_type_id
+          - name: pickup_zone_id
+          - name: dropoff_zone_id
+          - name: pickup_address
+          - name: dropoff_address
+          - name: pickup_lat
+          - name: pickup_lon
+          - name: dropoff_lat
+          - name: dropoff_lon
+          - name: requested_at
+            description: Timestamp when passenger placed the order.
+            tests: [not_null]
+          - name: accepted_at
+            description: Timestamp when a driver accepted. NULL if not accepted.
+          - name: picked_up_at
+            description: Timestamp when driver picked up passenger.
+          - name: completed_at
+            description: Timestamp when ride was completed.
+          - name: cancelled_at
+            description: Timestamp when ride was cancelled.
+          - name: distance_km
+            description: Total trip distance in kilometres.
+          - name: duration_minutes
+            description: Total trip duration in minutes.
+          - name: base_fare
+          - name: distance_fare
+          - name: time_fare
+          - name: surge_multiplier
+            description: Peak-hour surge multiplier (1.0, 1.2, 1.5, or 2.0).
+          - name: promo_discount
+            description: Discount amount applied from a promotion code.
+          - name: total_fare
+            description: Final fare after surge and promo (in IDR).
+          - name: ride_status
+            tests:
+              - accepted_values:
+                  values: ["REQUESTED", "ACCEPTED", "PICKED_UP", "COMPLETED", "CANCELLED", "NO_DRIVER"]
+          - name: cancellation_reason
+          - name: passenger_rating
+            description: Passenger's rating for driver (3.0–5.9, COMPLETED only).
+          - name: driver_rating
+            description: Driver's rating for passenger.
+          - name: notes
+          - name: created_at
+          - name: updated_at
+          - name: _source_system
+
+      # ─────────────────────────────────────────
+      #  RIDE EVENTS  (CDC-like event log)
+      # ─────────────────────────────────────────
+      - name: ride_events
+        description: >
+          Event log capturing each state transition of a ride. event_payload
+          is a JSONB/JSON column containing contextual data per event type:
+          RIDE_REQUESTED → {surge, zone}
+          RIDE_ACCEPTED  → {driver_id}
+          RIDE_COMPLETED → {fare, distance}
+          RIDE_CANCELLED → {reason}
+        loaded_at_field: occurred_at
+        columns:
+          - name: event_id
+            description: UUID primary key.
+            tests: [unique, not_null]
+          - name: ride_id
+            description: FK to rides.ride_id.
+            tests: [not_null]
+          - name: event_type
+            description: Event type identifier.
+            tests:
+              - accepted_values:
+                  values:
+                    - "RIDE_REQUESTED"
+                    - "RIDE_ACCEPTED"
+                    - "PASSENGER_PICKED_UP"
+                    - "RIDE_COMPLETED"
+                    - "RIDE_CANCELLED"
+          - name: event_payload
+            description: JSON payload with event-specific context.
+          - name: occurred_at
+            description: Timestamp when the event occurred.
+            tests: [not_null]
+          - name: _source_system

@@ -1,0 +1,49 @@
+{
+  "name": "gcs-sink-parquet",
+  "config": {
+    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+    "tasks.max": "3",
+
+    "topics.regex": "cdc\\.(public\\.(drivers|passengers|rides|vehicle_types|zones)|ride_ops_mg\\.(ride_events|driver_location_stream))",
+
+    "gcs.bucket.name": "dbt-taxi-explore-bucket",
+    "gcs.part.size": "5242880",
+    "gcs.credentials.path": "/opt/kafka/secrets/gcp/service-account.json",
+
+    "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
+    "format.class": "io.confluent.connect.gcs.format.parquet.ParquetFormat",
+    "parquet.codec": "snappy",
+
+    "topics.dir": "raw/cdc",
+    "path.format": "'topic='${topic}/'year='YYYY/'month='MM/'day='dd/'hour='HH",
+    "locale": "id_ID",
+    "timezone": "Asia/Jakarta",
+    "timestamp.extractor": "Wallclock",
+
+    "flush.size": "1000",
+    "rotate.interval.ms": "600000",
+    "rotate.schedule.interval.ms": "600000",
+
+    "schema.compatibility": "FULL",
+
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://127.0.0.1:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://127.0.0.1:8081",
+
+    "consumer.override.fetch.min.bytes": "50000",
+    "consumer.override.fetch.max.wait.ms": "500",
+
+    "errors.tolerance": "all",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "errors.deadletterqueue.topic.name": "gcs-sink-dlq",
+    "errors.deadletterqueue.topic.replication.factor": "1",
+    "errors.deadletterqueue.context.headers.enable": "true",
+    "max.retries": "10",
+    "retry.backoff.ms": "3000",
+
+    "confluent.topic.bootstrap.servers": "127.0.0.1:29092",
+    "confluent.topic.replication.factor": "1"
+  }
+}

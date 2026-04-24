@@ -1,0 +1,116 @@
+version: 2
+
+models:
+
+  # ─────────────────────────────────────────
+  #  dim_date
+  # ─────────────────────────────────────────
+  - name: dim_date
+    description: >
+      Date spine from data_start_date to today + 90 days with
+      Indonesian business calendar attributes and relative recency buckets.
+    columns:
+      - name: date_key
+        description: MD5 surrogate key generated from date_id.
+        tests: [unique, not_null]
+      - name: date_id
+        description: Natural date key (DATE type).
+        tests: [unique, not_null]
+      - name: full_date
+        tests: [unique, not_null]
+      - name: is_weekend
+        tests: [not_null]
+
+  # ─────────────────────────────────────────
+  #  dim_zones
+  # ─────────────────────────────────────────
+  - name: dim_zones
+    description: >
+      Active geographic zones enriched with province and area type
+      classification. Only is_active = true records are included.
+    columns:
+      - name: zone_key
+        description: MD5 surrogate key generated from zone_id.
+        tests: [unique, not_null]
+      - name: zone_id
+        tests: [unique, not_null]
+      - name: zone_code
+        tests: [unique, not_null]
+      - name: area_type
+        tests:
+          - accepted_values:
+              values: ["Jakarta Core", "Greater Jakarta"]
+
+  # ─────────────────────────────────────────
+  #  dim_vehicle_types
+  # ─────────────────────────────────────────
+  - name: dim_vehicle_types
+    description: Vehicle type dimension with fare tier and category groupings.
+    columns:
+      - name: vehicle_type_key
+        description: MD5 surrogate key generated from vehicle_type_id.
+        tests: [unique, not_null]
+      - name: vehicle_type_id
+        tests: [unique, not_null]
+      - name: fare_tier
+        tests:
+          - accepted_values:
+              values: ["Economy", "Mid-Range", "Premium"]
+
+  # ─────────────────────────────────────────
+  #  dim_drivers
+  # ─────────────────────────────────────────
+  - name: dim_drivers
+    description: >
+      Clean driver dimension with vehicle type and home zone denormalised.
+      Staging logic inlined: phone numbers normalised to 08XXXXXXXXX,
+      NIK stripped of spaces and validated to 16 digits,
+      license plates uppercased. DQ flags appended for observability.
+    columns:
+      - name: driver_key
+        description: MD5 surrogate key generated from driver_id.
+        tests: [unique, not_null]
+      - name: driver_id
+        tests: [unique, not_null]
+      - name: driver_status
+        tests:
+          - accepted_values:
+              values: ["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING"]
+      - name: experience_tier
+        tests:
+          - accepted_values:
+              values: ["Bronze", "Silver", "Gold", "Platinum"]
+      - name: phone_number
+        description: Canonical Indonesian phone number (08XXXXXXXXX) or NULL if invalid.
+      - name: nik
+        description: 16-digit NIK without spaces, or NULL if could not be cleaned.
+      - name: license_plate
+        description: Uppercased, trimmed license plate.
+      - name: rating
+        description: Rating capped to [1.0, 5.0].
+
+  # ─────────────────────────────────────────
+  #  dim_passengers
+  # ─────────────────────────────────────────
+  - name: dim_passengers
+    description: >
+      Clean passenger dimension with loyalty tier and home zone denormalised.
+      Staging logic inlined: phone numbers normalised to 08XXXXXXXXX.
+    columns:
+      - name: passenger_key
+        description: MD5 surrogate key generated from passenger_id.
+        tests: [unique, not_null]
+      - name: passenger_id
+        tests: [unique, not_null]
+      - name: passenger_status
+        tests:
+          - accepted_values:
+              values: ["ACTIVE", "INACTIVE", "BANNED"]
+      - name: gender
+        tests:
+          - accepted_values:
+              values: ["M", "F", "OTHER", "UNKNOWN"]
+      - name: loyalty_tier
+        tests:
+          - accepted_values:
+              values: ["New", "Silver", "Gold", "Platinum"]

@@ -1,0 +1,70 @@
+version: 2
+
+models:
+
+  # ─────────────────────────────────────────
+  #  fct_rides
+  # ─────────────────────────────────────────
+  - name: fct_rides
+    description: >
+      Central fact table — one row per ride. Bronze source cleaned and
+      enriched inline (staging logic inlined), then joined to all
+      dimensions for denormalised query performance.
+      Incremental merge on ride_id, partitioned by requested_date.
+    columns:
+      - name: ride_key
+        description: MD5 surrogate key generated from ride_id.
+        tests: [unique, not_null]
+      - name: ride_id
+        tests: [unique, not_null]
+      - name: passenger_id
+        tests: [not_null]
+      - name: ride_status
+        tests:
+          - accepted_values:
+              values: ["REQUESTED", "ACCEPTED", "PICKED_UP", "COMPLETED", "CANCELLED", "NO_DRIVER"]
+      - name: time_bucket
+        tests:
+          - accepted_values:
+              values: ["morning_peak", "evening_peak", "late_night", "off_peak"]
+      - name: total_fare
+        description: Final fare in IDR. 0 for cancelled rides.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: surge_multiplier
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1.0
+              max_value: 5.0
+      - name: distance_km
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  # ─────────────────────────────────────────
+  #  fct_ride_events
+  # ─────────────────────────────────────────
+  - name: fct_ride_events
+    description: >
+      Event-level fact — one row per ride lifecycle event.
+      JSON payload parsing inlined (staging logic inlined).
+      Ride context joined from fct_rides.
+      Incremental merge on event_id, partitioned by occurred_date.
+    columns:
+      - name: event_key
+        description: MD5 surrogate key generated from event_id.
+        tests: [unique, not_null]
+      - name: event_id
+        tests: [unique, not_null]
+      - name: ride_id
+        tests: [not_null]
+      - name: event_type
+        tests:
+          - accepted_values:
+              values:
+                - "RIDE_REQUESTED"
+                - "RIDE_ACCEPTED"
+                - "PASSENGER_PICKED_UP"
+                - "RIDE_COMPLETED"
+                - "RIDE_CANCELLED"

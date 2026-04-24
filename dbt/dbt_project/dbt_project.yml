@@ -1,0 +1,86 @@
+name: "ride_hailing"
+version: "1.0.0"
+config-version: 2
+
+profile: "ride_hailing"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+# ─────────────────────────────────────────
+#  Project Variables
+# ─────────────────────────────────────────
+vars:
+  gcp_project: "dbt-taxi-explore"
+  bronze_pg_dataset: "bronze_pg"
+  incremental_lookback_days: 3
+  data_start_date: "2026-01-01"
+
+# ─────────────────────────────────────────
+#  Model Configurations (Layer Defaults)
+# ─────────────────────────────────────────
+models:
+  ride_hailing:
+
+    # ── BRONZE: source views only, no transform ──
+    bronze:
+      +schema: "bronze_pg"
+      +materialized: view
+      +tags: ["bronze"]
+      +persist_docs:
+        relation: true
+        columns: true
+
+    # ── SILVER: cleaned, joined, star schema ──
+    silver:
+      +schema: "silver"
+      +tags: ["silver"]
+      +persist_docs:
+        relation: true
+        columns: true
+
+      dimensions:
+        +materialized: table
+        +tags: ["silver", "dimension"]
+
+      facts:
+        +materialized: incremental
+        +incremental_strategy: merge
+        +tags: ["silver", "fact"]
+
+    # ── GOLD: aggregated marts for dashboards ──
+    gold:
+      +schema: "gold"
+      +tags: ["gold"]
+      +persist_docs:
+        relation: true
+        columns: true
+
+      mart_operations:
+        +materialized: table
+        +tags: ["gold", "operations"]
+
+      mart_finance:
+        +materialized: table
+        +tags: ["gold", "finance"]
+
+      mart_driver:
+        +materialized: table
+        +tags: ["gold", "driver"]
+
+# ─────────────────────────────────────────
+#  Snapshot Configurations
+# ─────────────────────────────────────────
+snapshots:
+  ride_hailing:
+    +schema: "silver_snapshots"
+    +strategy: timestamp
+    +updated_at: "updated_at"
+    +tags: ["snapshot", "scd2"]

@@ -1,0 +1,28 @@
+services:
+  data-generator:
+    build:
+      context: ./data-generator/generator
+    container_name: taxi-data-generator
+    environment:
+      DB_HOST: postgres-ops
+      DB_PORT: 5432
+      DB_NAME: ride_ops_pg
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      TZ: Asia/Jakarta
+      SIM_START_AT: '2026-01-01T00:00:00+07:00'
+      SIM_SPEED: '60'
+      TICK_SECONDS: '1'
+      RIDES_PER_TICK_WEEKDAY_BASE: '2'
+      RIDES_PER_TICK_WEEKEND_BASE: '3'
+      INITIAL_DRIVERS: '150'
+      INITIAL_PASSENGERS: '600'
+      MAX_OPEN_RIDES: '400'
+      RANDOM_SEED: '42'
+    networks:
+      - taxi-network
+
+networks:
+  taxi-network:
+    # driver: bridge
+    external: true

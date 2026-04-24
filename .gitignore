@@ -1,0 +1,51 @@
+# ─── Environment & Secrets ────────────────────────────────
+.env
+*.env.local
+infrastructure/gcp/service-account-key.json
+infrastructure/gcp/*.json
+secrets/
+
+# ─── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ─── Docker ───────────────────────────────────────────────
+docker-compose.override.yml
+
+# ─── IDE ──────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ─── Logs ─────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Airflow ──────────────────────────────────────────────
+orchestration/airflow/logs/
+
+# ─── Great Expectations ───────────────────────────────────
+monitoring/great_expectations/uncommitted/
+
+# ─── Jupyter ──────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+Makefile
+credentials/service-account.json
+image/
+dev_bronze_pg&mysql.sql
+dbt_taxi/
+dbt_taxi_v2/
+script_rename.py

@@ -1,0 +1,43 @@
+[mysqld]
+# ============================================================
+# MySQL Banking Configuration
+# Pre-configured for CDC (Debezium/Kafka) — Phase 2 ready
+# ============================================================
+
+# ─── Server Identity (required for replication) ───────────
+server-id                   = 1
+
+# ─── Binary Logging (CDC prerequisites) ───────────────────
+log_bin                     = mysql-bin
+binlog_format               = ROW               # Required for Debezium CDC
+binlog_row_image            = FULL              # Capture before AND after images
+expire_logs_days            = 7                 # Retain 7 days of binlogs
+max_binlog_size             = 100M
+sync_binlog                 = 1                 # Durability: sync on every write
+binlog_rows_query_log_events = ON               # Log original SQL for debugging
+
+# ─── Character Set ────────────────────────────────────────
+character-set-server        = utf8mb4
+collation-server            = utf8mb4_unicode_ci
+
+# ─── Performance ──────────────────────────────────────────
+innodb_buffer_pool_size     = 512M
+innodb_log_file_size        = 128M
+innodb_flush_log_at_trx_commit = 1             # ACID compliance
+max_connections             = 200
+query_cache_type            = 0                 # Disable (deprecated in 8.0)
+
+# ─── Timezone ─────────────────────────────────────────────
+default-time-zone           = '+07:00'          # Asia/Jakarta (WIB)
+
+# ─── Slow Query Log ───────────────────────────────────────
+slow_query_log              = 1
+slow_query_log_file         = /var/log/mysql/mysql-slow.log
+long_query_time             = 2
+log_queries_not_using_indexes = 0
+
+# ─── Replication (for CDC replica user) ───────────────────
+# Grant these permissions to Debezium user (Phase 2):
+# CREATE USER 'debezium'@'%' IDENTIFIED BY 'debezium_password';
+# GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'debezium'@'%';
+# FLUSH PRIVILEGES;

@@ -1,0 +1,83 @@
+version: 2
+
+models:
+
+  # ── Operations ─────────────────────────────────────────────
+  - name: mart_daily_ride_summary
+    description: >
+      Daily operational KPIs per vehicle type, city, and time bucket.
+      One row per (date × vehicle_type_code × pickup_city × time_bucket).
+      Used by operations dashboard for ride volume, completion rates, and fare trends.
+    columns:
+      - name: ride_date
+        tests: [not_null]
+      - name: completion_rate_pct
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+      - name: gross_revenue_idr
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: mart_zone_heatmap
+    description: >
+      Origin-Destination matrix of completed rides. One row per
+      (date × pickup_zone × dropoff_zone × time_bucket).
+      Used by geo dashboard for supply/demand imbalance and hotspot detection.
+    columns:
+      - name: ride_date
+        tests: [not_null]
+      - name: trip_count
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+
+  - name: mart_cancellation_analysis
+    description: >
+      Daily cancellation breakdown by reason, vehicle type, and zone.
+      Used by the quality team to reduce cancellation rate.
+
+  # ── Finance ─────────────────────────────────────────────────
+  - name: mart_revenue_daily
+    description: >
+      Daily revenue P&L: GMV, platform fee (20%), driver earnings (80%),
+      promo burn, and surge uplift. One row per
+      (date × vehicle_category × fare_tier × pickup_province).
+    columns:
+      - name: ride_date
+        tests: [not_null]
+      - name: gmv_idr
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: net_platform_revenue_idr
+        description: Platform revenue minus promo discounts funded by the platform.
+
+  - name: mart_surge_analysis
+    description: >
+      Surge pricing effectiveness by zone and time bucket.
+      Used by the pricing team to calibrate surge thresholds.
+
+  # ── Driver ───────────────────────────────────────────────────
+  - name: mart_driver_performance
+    description: >
+      All-time driver scorecards — one row per driver. Combines dim_drivers
+      with lifetime aggregated stats from fct_rides.
+      Used by driver management dashboard and incentive calculation.
+    columns:
+      - name: driver_id
+        tests: [unique, not_null]
+      - name: performance_score
+        description: Composite score 0–100 (40% completion rate, 40% rating, 20% volume).
+
+  - name: mart_driver_daily_activity
+    description: >
+      Per-driver daily activity rollup for payroll processing and daily ops.
+      Grain: driver_id × ride_date.
+    columns:
+      - name: ride_date
+        tests: [not_null]
+      - name: driver_id
+        tests: [not_null]
