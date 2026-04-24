@@ -24,6 +24,8 @@ services:
         condition: service_healthy
       - mongodb:
         condition: service_healthy
+      - mongodb-rs-init:
+        condition: service_completed_successfully
     networks:
       - taxi-network
 
@@ -96,3 +98,7 @@ networks:
   taxi-network:
     # driver: bridge
     external: true
+
+volumes:
+  postgres-ops-data:
+  mongodb-data:

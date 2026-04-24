@@ -66,8 +66,7 @@ services:
       mc rm -r --force minio/warehouse;
       mc mb minio/warehouse;
       mc anonymous set public minio/warehouse;
-      tail -f /dev/null
-      " 
+      echo 'MinIO client setup complete.';
 
 networks:
   taxi-network:
