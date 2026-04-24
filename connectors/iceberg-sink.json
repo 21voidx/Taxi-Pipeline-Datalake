@@ -1,7 +1,7 @@
 {
   "name": "iceberg-sink-connector",
   "config": {
-    "connector.class": "io.tabular.iceberg.connect.IcebergSinkConnector",
+    "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
     "tasks.max": "4",
 
     "topics": "pg.public.zones,pg.public.vehicle_types,pg.public.drivers,pg.public.passengers,pg.public.rides,mg.ride_ops_mg.ride_events,mg.ride_ops_mg.driver_location_stream",
