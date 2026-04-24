@@ -93,46 +93,6 @@ services:
     networks:
       - taxi-network
 
-  postgres-ops:
-    image: postgres:14-alpine
-    container_name: taxi-postgres-ops
-    environment:
-      POSTGRES_DB: ride_ops_pg
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres-ops-data:/var/lib/postgresql/data
-      - ./data-generator/postgres/init_postgres.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-    command: >
-      postgres
-        -c wal_level=logical
-        -c max_replication_slots=10
-        -c max_wal_senders=10
-        -c wal_keep_size=1024
-        -c shared_preload_libraries=pgoutput
-        -c log_replication_commands=on
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ride_ops_pg"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - taxi-network
-
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb-data:/data/db
-    networks:
-      - taxi-network
-
   # mongo-express:
   #   image: mongo-express:latest
   #   container_name: mongo-express
