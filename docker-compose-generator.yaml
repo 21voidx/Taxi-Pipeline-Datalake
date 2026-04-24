@@ -66,6 +66,12 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - taxi-network
 
