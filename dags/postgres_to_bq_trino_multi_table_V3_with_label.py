@@ -327,8 +327,8 @@ with DAG(
         f"({len(TABLE_CONFIGS)} tabel)"
     ),
     default_args=default_args,
-    schedule=CronDataIntervalTimetable("30 14 * * *", timezone="Asia/Jakarta"), # setiap hari pada pukul 14:30 (2:30 siang)
-    start_date=pendulum.datetime(2026, 4, 19, tz="Asia/Jakarta"),
+    schedule=CronDataIntervalTimetable("30 22 * * *", timezone="Asia/Jakarta"), # setiap hari pada pukul 22:30 (22:30 malam)
+    start_date=pendulum.datetime(2026, 4, 23, tz="Asia/Jakarta"),
     catchup=True,
     max_active_runs=1,
     tags=["postgres", "bigquery", "trino", "ingestion", "multi-table"],
