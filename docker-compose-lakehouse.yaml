@@ -11,7 +11,7 @@ services:
       MINIO_API_SELECT_PARQUET: "on"
     command: server /data --console-address ":9001"
     ports:
-      - "9002:9000"
+      - "9000:9000"
       - "9001:9001"
     volumes:
       - minio-data:/data
@@ -28,7 +28,7 @@ services:
     container_name: polaris
     image: apache/polaris:1.4.0
     ports:
-      - "8183:8181"
+      - "8181:8181"
       - "8182:8182"
     networks:
       - taxi-network
