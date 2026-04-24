@@ -10,6 +10,7 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+import pendulum
 
 from google.cloud import bigquery
 
@@ -98,7 +99,7 @@ def _mark_files_loaded(
             "topic": topic,
             "object_name": object_name,
             "destination_table": destination_table,
-            "loaded_at": datetime.utcnow().isoformat(),
+            "loaded_at": datetime.now().isoformat(),
             "dag_run_id": context["dag_run"].run_id,
         }
         for object_name in files
@@ -113,7 +114,7 @@ def _mark_files_loaded(
 @dag(
     dag_id="cdc_gcs_to_bigquery_10min",
     description="Incremental CDC load from GCS Parquet files to BigQuery every 10 minutes",
-    start_date=datetime(2026, 1, 1),
+    start_date=pendulum.datetime(2026, 4, 24, tz="Asia/Jakarta"),
     schedule="*/10 * * * *",
     catchup=False,
     max_active_runs=1,
