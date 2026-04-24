@@ -20,11 +20,11 @@ services:
       MAX_OPEN_RIDES: '400'
       RANDOM_SEED: '42'
     depends_on:
-      - postgres-ops:
+      postgres-ops:
         condition: service_healthy
-      - mongodb:
+      mongodb:
         condition: service_healthy
-      - mongodb-rs-init:
+      mongodb-rs-init:
         condition: service_completed_successfully
     networks:
       - taxi-network
