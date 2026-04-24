@@ -64,8 +64,6 @@ x-airflow-common:
     &airflow-common-depends-on
     postgres:
       condition: service_healthy
-    postgres-ops:
-      condition: service_healthy
     trino:
       condition: service_healthy
     # mysql:
@@ -164,11 +162,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
-    depends_on:
-      postgres-ops:
-        condition: service_healthy
-      # mysql:
-      #   condition: service_healthy
 
   # redis:
   #   image: redis:7.2-bookworm
@@ -384,8 +377,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      postgres-ops:
-        condition: service_healthy
       trino:
         condition: service_healthy
       # mysql:
@@ -395,10 +386,8 @@ services:
 
 
 volumes:
-  postgres-ops-data:
   airflow-db-data:
   airflow-logs:
-  mongodb-data:
   # mysql-data:
 
 networks:

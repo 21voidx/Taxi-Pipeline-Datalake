@@ -161,4 +161,3 @@ networks:
 
 volumes:
   kafka-data:
-  postgres-catalog-data:
