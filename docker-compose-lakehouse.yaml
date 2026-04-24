@@ -25,6 +25,7 @@ services:
       start_period: 10s
 
   polaris:
+    container_name: polaris
     image: apache/polaris:1.4.0
     ports:
       - "8181:8181"
@@ -48,6 +49,7 @@ services:
       retries: 5
 
   minio-client:
+    container_name: minio-client
     image: minio/mc:latest
     depends_on:
       - minio
@@ -62,7 +64,7 @@ services:
       AWS_REGION: dummy-region
     entrypoint: >
       /bin/sh -c "
-      until (mc alias set minio http://minio:9000 admin password) do echo '...waiting...' && sleep 1; done;
+      until (mc alias set minio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}) do echo '...waiting...' && sleep 1; done;
       mc rm -r --force minio/warehouse;
       mc mb minio/warehouse;
       mc anonymous set public minio/warehouse;
