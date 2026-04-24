@@ -37,8 +37,8 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: dummy-region
-      AWS_ENDPOINT_URL_S3: http://minio:9002
-      AWS_ENDPOINT_URL_STS: http://minio:9002
+      AWS_ENDPOINT_URL_S3: http://minio:9000
+      AWS_ENDPOINT_URL_STS: http://minio:9000
       POLARIS_BOOTSTRAP_CREDENTIALS: default-realm,root,secret
       polaris.features.DROP_WITH_PURGE_ENABLED: true # allow dropping tables from the SQL client
       polaris.realm-context.realms: default-realm
