@@ -178,7 +178,7 @@ services:
       start_period: 10s
 
   postgres-catalog:
-    image: postgres:16
+    image: postgres:14-alpine
     container_name: postgres-catalog
     environment:
       POSTGRES_DB: ${ICEBERG_CATALOG_DB}
@@ -204,3 +204,5 @@ networks:
 
 volumes:
   kafka-data:
+  minio-data:
+  postgres-catalog-data:
