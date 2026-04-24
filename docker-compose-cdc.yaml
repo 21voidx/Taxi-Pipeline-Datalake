@@ -186,6 +186,7 @@ services:
       POSTGRES_PASSWORD: ${ICEBERG_CATALOG_PASSWORD}
     volumes:
       - postgres-catalog-data:/var/lib/postgresql/data
+      - ./trino/init_catalog_iceberg_jdbc.sql:/docker-entrypoint-initdb.d/init_catalog_iceberg_jdbc.sql:ro
     ports:
       - "5434:5432"
     healthcheck:
