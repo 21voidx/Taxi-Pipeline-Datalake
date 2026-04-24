@@ -4,7 +4,7 @@
     "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
     "tasks.max": "4",
 
-    "topics": "pg.public.zones,pg.public.vehicle_types,pg.public.drivers,pg.public.passengers,pg.public.rides,mg.ride_ops_mg.ride_events,mg.ride_ops_mg.driver_location_stream",
+    "topics": "cdc.public.zones,cdc.public.vehicle_types,cdc.public.drivers,cdc.public.passengers,cdc.public.rides,cdc.ride_ops_mg.ride_events,cdc.ride_ops_mg.driver_location_stream",
 
     "iceberg.catalog.type": "jdbc",
     "iceberg.catalog.jdbc.uri": "jdbc:postgresql://postgres-catalog:5432/iceberg_catalog",
@@ -25,13 +25,13 @@
 
     "iceberg.tables.route-field": "_source_system",
 
-    "iceberg.table.pg.public.zones":                         "cdc.zones",
-    "iceberg.table.pg.public.vehicle_types":                 "cdc.vehicle_types",
-    "iceberg.table.pg.public.drivers":                       "cdc.drivers",
-    "iceberg.table.pg.public.passengers":                    "cdc.passengers",
-    "iceberg.table.pg.public.rides":                         "cdc.rides",
-    "iceberg.table.mg.ride_ops_mg.ride_events":              "cdc.ride_events",
-    "iceberg.table.mg.ride_ops_mg.driver_location_stream":   "cdc.driver_location_stream",
+    "iceberg.table.cdc.public.zones":                       "cdc.zones",
+    "iceberg.table.cdc.public.vehicle_types":               "cdc.vehicle_types",
+    "iceberg.table.cdc.public.drivers":                     "cdc.drivers",
+    "iceberg.table.cdc.public.passengers":                  "cdc.passengers",
+    "iceberg.table.cdc.public.rides":                       "cdc.rides",
+    "iceberg.table.cdc.ride_ops_mg.ride_events":            "cdc.ride_events",
+    "iceberg.table.cdc.ride_ops_mg.driver_location_stream": "cdc.driver_location_stream",
 
     "iceberg.control.commit.interval-ms": "1800000",
     "iceberg.control.commit.timeout-ms": "300000",

@@ -29,7 +29,7 @@
     "transforms.unwrap.drop.tombstones": "false",
     "transforms.unwrap.delete.handling.mode": "rewrite",
     "transforms.unwrap.add.fields": "op,source.ts_ms,table",
-    "transforms.unwrap.add.headers": "db",
+    "transforms.unwrap.add.headers": "source.db:db",
     "snapshot.mode": "initial",
     "snapshot.isolation.mode": "repeatable_read",
     "decimal.handling.mode": "precise",
