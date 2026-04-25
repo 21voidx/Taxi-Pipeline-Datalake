@@ -79,10 +79,11 @@ services:
     image: mongo-express:latest
     container_name: mongo-express
     environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mongo_admin}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo_password}
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      # ME_CONFIG_MONGODB_SERVER: mongodb
+      # ME_CONFIG_MONGODB_PORT: 27017
+      # ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mongo_admin}
+      # ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mongo_password}
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME:-express_user}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-express_password}
     ports:
@@ -90,8 +91,9 @@ services:
     networks:
       - taxi-network
     depends_on:
-      - mongodb
-
+      mongodb:
+        condition: service_healthy
+        
   mongodb-rs-init:
     image: mongo:latest
     container_name: mongodb-rs-init
